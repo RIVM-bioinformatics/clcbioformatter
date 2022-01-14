@@ -1,0 +1,17 @@
+Bootstrap: docker
+From: python:3.9
+
+%labels
+    Autor "Alejandra Hernández Segura"
+    Description "Formatter for fasta file headers to make them compatible with CLC bio"
+
+%post
+    apt-get update -y
+    # TODO: add a specific version after testing phase ends
+    pip install --editable git+https://github.com/AleSR13/clcbioformatter@master#egg=clcbioformatter
+
+%runscript
+    /bin/bash $@
+
+%startscript
+    /bin/bash $@
