@@ -1,5 +1,4 @@
 import argparse
-from os import mkdir
 import pathlib
 import subprocess
 
