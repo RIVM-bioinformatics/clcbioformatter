@@ -1,0 +1,9 @@
+name: clcbioformatter
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python>=3.9
+  - pip>=21.2
+  - pip:
+    - "--editable=git+https://github.com/AleSR13/clcbioformatter@master#egg=clcbioformatter"

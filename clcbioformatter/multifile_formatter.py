@@ -1,5 +1,5 @@
 import argparse
-from operator import add
+# from operator import add
 from clcbioformatter.reformat_fastaheader import reformat_fasta
 import pathlib
 import warnings
