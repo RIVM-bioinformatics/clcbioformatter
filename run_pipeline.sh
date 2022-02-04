@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Wrapper for clcbioformatter
-
+set +x
 set -euo pipefail
 
 #----------------------------------------------#
@@ -31,7 +31,7 @@ fi
 #----------------------------------------------#
 # Run the pipeline
 
-echo -e "\nRun pipeline..."
+echo -e "\nRe-formatting  pipeline..."
 
 set +euo pipefail
 if [ ! -z ${irods_runsheet_sys__runsheet__lsf_queue} ]; then
@@ -68,7 +68,7 @@ bsub -J "${job_id}" \
   --bind ${INPUTDIR}:${INPUTDIR} \
   --bind ${OUTPUTDIR}:${OUTPUTDIR} \
   ${sing_image} \
-  python clcbioformatter/multifile_formatter.py -i ${INPUTDIR} -o ${OUTPUTDIR} -n 4"
+  python clcbioformatter/multifile_formatter.py -i ${INPUTDIR} -o ${OUTPUTDIR}/reformatted_fasta -n 4"
 
 bwait -w "${job_id}"
     

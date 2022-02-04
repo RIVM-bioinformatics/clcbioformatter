@@ -1,0 +1,30 @@
+name: Clcbioformatter test
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config: 
+          - {os: macOS-latest}
+          - {os: ubuntu-18.04}
+          - {os: ubuntu-latest}
+    name: Testing re-formatting of fasta files to fit CLCBio requirements ${{ matrix.config.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setting up conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          mamba-version: "*"
+          channels: conda-forge, defaults
+          channel-priority: true
+          environment-file: envs/testing_env.yaml 
+          activate-environment: clcbioformatter_tests
+          auto-activate-base: false
+      - name: Test the re-formatting of single files and of directories
+        shell: bash -l {0}
+        run: pytest -v tests/test_formatter.py

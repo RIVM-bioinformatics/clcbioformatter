@@ -75,5 +75,13 @@ if __name__ == '__main__':
         metavar = "FILE",
         help = "Fasta file from which the headers will be renamed."
     )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type = pathlib.Path,
+        metavar = "DIR",
+        default=None,
+        help = "Fasta file from which the headers will be renamed."
+    )
     args = parser.parse_args()
-    reformat_fasta(args.pileup_res, args.fasta)
+    reformat_fasta(args.pileup_res, args.fasta, args.output)
