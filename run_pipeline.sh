@@ -68,7 +68,7 @@ bsub -J "${job_id}" \
   --bind ${INPUTDIR}:${INPUTDIR} \
   --bind ${OUTPUTDIR}:${OUTPUTDIR} \
   ${sing_image} \
-  python clcbioformatter/multifile_formatter.py -i ${INPUTDIR} -o ${OUTPUTDIR}/reformatted_fasta -n 4"
+  python ${DIR}/clcbioformatter/multifile_formatter.py -i ${INPUTDIR} -o ${OUTPUTDIR}/reformatted_fasta -n 4"
 
 bwait -w "${job_id}"
     
