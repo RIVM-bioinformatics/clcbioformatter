@@ -7,9 +7,6 @@ set -euo pipefail
 #----------------------------------------------#
 # User parameters
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null 2>&1 && pwd )"
-cd ${DIR}
-
 # Sanity checks
 set +euo pipefail
 if [ ! -z "${1}" ] || [ ! -z "${2}" ]
@@ -21,6 +18,9 @@ else
   exit 1
 fi
 set -euo pipefail
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null 2>&1 && pwd )"
+cd ${DIR}
 
 if [ ! -d "${INPUTDIR}" ] || [ ! -d "${OUTPUTDIR}" ]
 then
@@ -67,8 +67,9 @@ bsub -J "${job_id}" \
   "singularity exec \
   --bind ${INPUTDIR}:${INPUTDIR} \
   --bind ${OUTPUTDIR}:${OUTPUTDIR} \
+  --bind $(dirname "${BASH_SOURCE[0]}"):/home/${USER}/ \
   ${sing_image} \
-  python ${DIR}/clcbioformatter/multifile_formatter.py -i ${INPUTDIR} -o ${OUTPUTDIR}/reformatted_fasta -n 4"
+  python clcbioformatter/multifile_formatter.py -i ${INPUTDIR} -o ${OUTPUTDIR}/reformatted_fasta -n 4"
 
 bwait -w "${job_id}"
     
