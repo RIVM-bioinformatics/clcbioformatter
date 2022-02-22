@@ -1,5 +1,4 @@
 import argparse
-# from operator import add
 from clcbioformatter.reformat_fastaheader import reformat_fasta
 import pathlib
 import warnings
@@ -38,6 +37,11 @@ def make_file_dict(list_fasta: list, list_bbtools_res: list):
             category=UserWarning
         )
         [file_dict.pop(unpaired_sample) for unpaired_sample in samples_without_bbtools_res]
+    if len(file_dict) == 0:
+        raise ValueError(f'No fasta files were found with matching bbtools result (_perMinLenFiltScaffold) files!')
+    print('These files will be re-formatted: \n')
+    for file_ in file_dict:
+        print(f'- {file_dict[file_]["fasta"]}''\n')
     return file_dict
 
 def reformat_multiple_files(file_dict: dict, output_dir: str, cores: int):

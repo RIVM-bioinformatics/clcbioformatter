@@ -55,13 +55,16 @@ fi
 RANDOM=$(date +%s%N | cut -b10-19)
 job_id="clcbioformatter_${RANDOM}"
 
-mkdir -p "${OUTPUTDIR}/logs"
+log_dir="${OUTPUTDIR}/log"
+mkdir -p "${log_dir}"
+
+echo -e "clcbioformatter job was submitted to the cluster with jobID: ${job_id}"
 
 bsub -J "${job_id}" \
   -n 4 \
   -q "${QUEUE}" \
-  -o "${OUTPUTDIR}/logs/clcbioformatter.out" \
-  -e "${OUTPUTDIR}/logs/clcbioformatter.err" \
+  -o "${log_dir}/clcbioformatter.out" \
+  -e "${log_dir}/clcbioformatter.err" \
   -R \"span[hosts=1]\" \
   -W 60 \
   "singularity exec \
@@ -71,7 +74,7 @@ bsub -J "${job_id}" \
   ${sing_image} \
   python clcbioformatter/multifile_formatter.py -i ${INPUTDIR} -o ${OUTPUTDIR}/reformatted_fasta -n 4"
 
-bwait -w "${job_id}"
+bwait -r 1 -w "done(${job_id})"
     
 result=$?
 
@@ -95,6 +98,8 @@ do
         echo "${attrname}: '${!key}'" >> ${OUTPUTDIR}/metadata.yml
     fi
 done
+
+set -euo pipefail
 
 version=$(git rev-parse HEAD)
 echo "clcbioformatter_version: '${version}'" >> ${OUTPUTDIR}/metadata.yml
