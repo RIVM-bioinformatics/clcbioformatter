@@ -57,6 +57,7 @@ job_id="clcbioformatter_${RANDOM}"
 
 log_dir="${OUTPUTDIR}/log"
 mkdir -p "${log_dir}"
+reformatted_dir=${OUTPUTDIR}/reformatted_fasta
 
 echo -e "clcbioformatter job was submitted to the cluster with jobID: ${job_id}"
 
@@ -72,11 +73,29 @@ bsub -J "${job_id}" \
   --bind ${OUTPUTDIR}:${OUTPUTDIR} \
   --bind $(dirname "${BASH_SOURCE[0]}"):/home/${USER}/ \
   ${sing_image} \
-  python clcbioformatter/multifile_formatter.py -i ${INPUTDIR} -o ${OUTPUTDIR}/reformatted_fasta -n 4"
+  python clcbioformatter/multifile_formatter.py -i ${INPUTDIR} -o ${reformatted_dir} -n 4"
 
-bwait -r 1 -w "done(${job_id})"
-    
-result=$?
+bwait -r 1 -w "ended(${job_id})"
+
+# Sometimes bwait exits even if the output is not there so better to check the output dir is there:
+
+if [ ! -d ${reformatted_dir} ]
+then
+  # Wait for results just in case
+  sleep 100
+fi
+# If still the result is not there, fail
+# Otherwise make sure that some files were produced
+if [ ! -d ${reformatted_dir} ]
+then
+  result=1
+else
+  num_fasta_reformatted=$(find ${reformatted_dir} -type f -name *.fasta | wc -l)
+  if [ ${num_fasta_reformatted} > 0 ]
+  then
+    result=0
+  fi
+fi
 
 # Propagate metadata
 
@@ -106,10 +125,12 @@ echo "clcbioformatter_version: '${version}'" >> ${OUTPUTDIR}/metadata.yml
 
 if [ ${result} == 0 ]
 then
+  # I don know why but a file '0' is made when the job is successful
+  rm -f 0
   echo -e "\n\nFinished successfully reformatting the fasta files from ${INPUTDIR}."
   echo -e "\nThe re-formatted files can be found at ${OUTPUTDIR}.\n"
 else
-  echo "An error occured while running the clcbioformatter"
+  echo -e "\nAn error occured while running the clcbioformatter! Please refer to the log files in ${log_dir}\n"
 fi
 
 exit ${result}
