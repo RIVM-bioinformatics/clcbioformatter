@@ -48,6 +48,7 @@ def reformat_multiple_files(file_dict: dict, output_dir: str, cores: int):
     '''Function to apply the reformat_fasta() function to multiple 
     files
     '''
+    print('Reformatting files in parallel...\n')
     pool = mp.Pool(cores)
     for sample in file_dict:
         pool.apply_async(
@@ -60,10 +61,12 @@ def reformat_multiple_files(file_dict: dict, output_dir: str, cores: int):
         )
     pool.close()
     pool.join()
+    print('\nFinished reformatting...\n')
 
 def make_output_dir(output_dir: str):
     '''Function to make the output directory if one is given'''
     if output_dir is not None:
+        print('Making output directory...\n')
         pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
 

@@ -75,7 +75,7 @@ bsub -J "${job_id}" \
   ${sing_image} \
   python clcbioformatter/multifile_formatter.py -i ${INPUTDIR} -o ${reformatted_dir} -n 4"
 
-bwait -r 1 -w "ended(${job_id})"
+bwait -w "ended(${job_id})"
 
 # Sometimes bwait exits even if the output is not there so better to check the output dir is there:
 
@@ -90,6 +90,7 @@ if [ ! -d ${reformatted_dir} ]
 then
   result=1
 else
+  echo -e "\nChecking that output is present...\n"
   num_fasta_reformatted=$(find ${reformatted_dir} -type f -name *.fasta | wc -l)
   if [ ${num_fasta_reformatted} > 0 ]
   then
