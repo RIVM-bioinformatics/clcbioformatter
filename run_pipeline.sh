@@ -61,7 +61,9 @@ reformatted_dir=${OUTPUTDIR}/reformatted_fasta
 
 echo -e "clcbioformatter job was submitted to the cluster with jobID: ${job_id}"
 
+# Option -K waits for the job to finish
 bsub -J "${job_id}" \
+  -K \
   -n 4 \
   -q "${QUEUE}" \
   -o "${log_dir}/clcbioformatter.out" \
@@ -75,13 +77,12 @@ bsub -J "${job_id}" \
   ${sing_image} \
   python clcbioformatter/multifile_formatter.py -i ${INPUTDIR} -o ${reformatted_dir} -n 4"
 
-bwait -w "ended(${job_id})"
-
 # Sometimes bwait exits even if the output is not there so better to check the output dir is there:
 
 if [ ! -d ${reformatted_dir} ]
 then
   # Wait for results just in case
+  echo "Waiting for results..."
   sleep 100
 fi
 # If still the result is not there, fail
@@ -92,9 +93,12 @@ then
 else
   echo -e "\nChecking that output is present...\n"
   num_fasta_reformatted=$(find ${reformatted_dir} -type f -name *.fasta | wc -l)
+  echo -e "${num_fasta_reformatted} files were reformatted\n"
   if [ ${num_fasta_reformatted} > 0 ]
   then
     result=0
+  else
+    result=1
   fi
 fi
 
@@ -103,7 +107,7 @@ fi
 set +euo pipefail
 
 SEQ_KEYS=
-SEQ_ENV=`env | grep irods_input_sequencing`
+SEQ_ENV=$(env | grep irods_input_sequencing)
 for SEQ_AVU in ${SEQ_ENV}
 do
     SEQ_KEYS="${SEQ_KEYS} ${SEQ_AVU%%=*}"
@@ -122,16 +126,16 @@ done
 set -euo pipefail
 
 version=$(git rev-parse HEAD)
-echo "clcbioformatter_version: '${version}'" >> ${OUTPUTDIR}/metadata.yml
+echo "clcbioformatter_version: '${version}'" >> "${OUTPUTDIR}/metadata.yml"
 
 if [ ${result} == 0 ]
 then
   # I don know why but a file '0' is made when the job is successful
   rm -f 0
   echo -e "\n\nFinished successfully reformatting the fasta files from ${INPUTDIR}."
-  echo -e "\nThe re-formatted files can be found at ${OUTPUTDIR}.\n"
+  echo -e "\nThe re-formatted files can be found at ${reformatted_dir}.\n"
 else
   echo -e "\nAn error occured while running the clcbioformatter! Please refer to the log files in ${log_dir}\n"
 fi
 
-exit ${result}
+exit "${result}"
