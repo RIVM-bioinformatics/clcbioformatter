@@ -57,7 +57,7 @@ job_id="clcbioformatter_${RANDOM}"
 
 log_dir="${OUTPUTDIR}/log"
 mkdir -p "${log_dir}"
-reformatted_dir=${OUTPUTDIR}/reformatted_fasta
+reformatted_dir="${OUTPUTDIR}/reformatted_fasta"
 
 echo -e "clcbioformatter job was submitted to the cluster with jobID: ${job_id}"
 
