@@ -1,0 +1,7 @@
+name: clcbioformatter_master
+channels:
+  - defaults
+  - conda-forge
+  - bioconda
+dependencies:
+  - snakemake-minimal

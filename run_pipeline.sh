@@ -19,7 +19,7 @@ else
 fi
 set -euo pipefail
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null 2>&1 && pwd )"
+DIR="$(dirname ${BASH_SOURCE[0]} )"
 cd ${DIR}
 
 if [ ! -d "${INPUTDIR}" ] || [ ! -d "${OUTPUTDIR}" ]
@@ -27,6 +27,15 @@ then
   echo "Either the input directory (${INPUTDIR}) or the output directory (${OUTPUTDIR}) do not exist!"
   exit 1
 fi
+
+#----------------------------------------------#
+# Create and activate snakemake environment
+PATH_MASTER_YAML='envs/master_env.yaml'
+conda env update -f "${PATH_MASTER_YAML}"
+MASTER_NAME=$(head -n 1 ${PATH_MASTER_YAML} | cut -f2 -d ' ')
+set +euo pipefail
+source activate "${MASTER_NAME}"
+set -euo pipefail
 
 #----------------------------------------------#
 # Run the pipeline
@@ -45,62 +54,42 @@ set -euo pipefail
 # Containers will use it for storing tmp files when building a container
 export SINGULARITY_TMPDIR="$(pwd)"
 
-sing_image="/mnt/db/juno/sing_containers/clcbioformatter_v0.1.img"
-if [ ! -f ${sing_image} ]
-then
-  singularity pull --name "${sing_image}" library://alesr13/default/clcbioformatter:sha256.3cf5a626bad956d5bc9e35cadd71ea4d5f509007002429e24ad887e9e5dd1dc0
-fi
-
-# Generate random job_id
-RANDOM=$(date +%s%N | cut -b10-19)
-job_id="clcbioformatter_${RANDOM}"
+# sing_image="/mnt/db/juno/sing_containers/clcbioformatter_v0.1.img"
+# if [ ! -f ${sing_image} ]
+# then
+#   singularity pull --name "${sing_image}" library://alesr13/default/clcbioformatter:sha256.3cf5a626bad956d5bc9e35cadd71ea4d5f509007002429e24ad887e9e5dd1dc0
+# fi
 
 log_dir="${OUTPUTDIR}/log"
 mkdir -p "${log_dir}"
 reformatted_dir="${OUTPUTDIR}/reformatted_fasta"
 
-echo -e "clcbioformatter job was submitted to the cluster with jobID: ${job_id}"
+bsub_command=" bsub -q ${QUEUE} \
+                -n {threads} \
+                -o ${log_dir}/clcbioformatter_bsub.out \
+                -e ${log_dir}/clcbioformatter_bsub.err \
+                -R \"span[hosts=1]\" \
+                -R \"rusage[mem={resources.mem_gb}G]\" \
+                -M {resources.mem_gb}G \
+                -W 60 "
 
-# Option -K waits for the job to finish
-bsub -J "${job_id}" \
-  -K \
-  -n 4 \
-  -q "${QUEUE}" \
-  -o "${log_dir}/clcbioformatter.out" \
-  -e "${log_dir}/clcbioformatter.err" \
-  -R \"span[hosts=1]\" \
-  -W 60 \
-  "singularity exec \
-  --bind ${INPUTDIR}:${INPUTDIR} \
-  --bind ${OUTPUTDIR}:${OUTPUTDIR} \
-  --bind $(dirname "${BASH_SOURCE[0]}"):/home/${USER}/ \
-  ${sing_image} \
-  python clcbioformatter/multifile_formatter.py -i ${INPUTDIR} -o ${reformatted_dir} -n 4"
+singularity_args=" --bind ${INPUTDIR}:${INPUTDIR} \
+        --bind ${OUTPUTDIR}:${OUTPUTDIR} \
+        --bind $(dirname ${BASH_SOURCE[0]}):/home/${USER}/ "
 
-# Sometimes bwait exits even if the output is not there so better to check the output dir is there:
+snakemake --cores 250 \
+    --jobs 99 \
+    --config "input_dir"="${INPUTDIR}" "reformatted_dir"="${reformatted_dir}" "log_dir"="${log_dir}" \
+    --jobname "clcbioformatter_{jobid}" \
+    --use-singularity \
+    --singularity-args "${singularity_args}" \
+    --singularity-prefix '/mnt/db/juno/sing_containers/'\
+    --keep-going \
+    --printshellcmds \
+    --latency-wait 60 \
+    --cluster "${bsub_command}"
 
-if [ ! -d ${reformatted_dir} ]
-then
-  # Wait for results just in case
-  echo "Waiting for results..."
-  sleep 100
-fi
-# If still the result is not there, fail
-# Otherwise make sure that some files were produced
-if [ ! -d ${reformatted_dir} ]
-then
-  result=1
-else
-  echo -e "\nChecking that output is present...\n"
-  num_fasta_reformatted=$(find ${reformatted_dir} -type f -name *.fasta | wc -l)
-  echo -e "${num_fasta_reformatted} files were reformatted\n"
-  if [ ${num_fasta_reformatted} > 0 ]
-  then
-    result=0
-  else
-    result=1
-  fi
-fi
+result="$?"
 
 # Propagate metadata
 

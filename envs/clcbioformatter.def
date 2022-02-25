@@ -7,8 +7,7 @@ From: python:3.9
 
 %post
     apt-get update -y
-    # TODO: add a specific version after testing phase ends
-    pip install --editable git+https://github.com/AleSR13/clcbioformatter@master#egg=clcbioformatter
+    pip install --editable git+https://github.com/AleSR13/clcbioformatter@v0.1.1#egg=clcbioformatter
 
 %runscript
     /bin/bash $@
