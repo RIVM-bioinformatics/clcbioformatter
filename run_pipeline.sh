@@ -63,6 +63,7 @@ export SINGULARITY_TMPDIR="$(pwd)"
 log_dir="${OUTPUTDIR}/log"
 mkdir -p "${log_dir}"
 reformatted_dir="${OUTPUTDIR}/reformatted_fasta"
+mkdir -p "${reformatted_dir}"
 
 bsub_command=" bsub -q ${QUEUE} \
                 -n {threads} \
