@@ -115,7 +115,8 @@ done
 
 set -euo pipefail
 
-version=$(git rev-parse HEAD)
+version=$(git --git-dir .git log -n 1 --pretty=format:"%H")
+
 echo "clcbioformatter_version: '${version}'" >> "${OUTPUTDIR}/metadata.yml"
 
 if [ ${result} == 0 ]
