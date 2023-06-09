@@ -29,13 +29,34 @@ then
 fi
 
 #----------------------------------------------#
-# Create and activate snakemake environment
-PATH_MASTER_YAML='envs/master_env.yaml'
-conda env update -f "${PATH_MASTER_YAML}"
-MASTER_NAME=$(head -n 1 ${PATH_MASTER_YAML} | cut -f2 -d ' ')
-set +euo pipefail
-source activate "${MASTER_NAME}"
-set -euo pipefail
+## make sure conda works
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/mnt/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/mnt/miniconda/etc/profile.d/conda.sh" ]; then
+        . "/mnt/miniconda/etc/profile.d/conda.sh"
+    else
+        export PATH="/mnt/miniconda/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<export -f conda
+export -f __conda_activate
+export -f __conda_reactivate
+export -f __conda_hashr
+
+
+#----------------------------------------------#
+# Create the environment
+
+# we can use the base installation of mamba to create the environment. 
+# Swapping to a parent env is not necessary anymore.
+mamba env create -f envs/master_env.yaml --name pipeline_env
+conda activate pipeline_env
 
 #----------------------------------------------#
 # Run the pipeline
