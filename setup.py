@@ -14,7 +14,7 @@ URL = 'https://github.com/AleSR13/clcbioformatter'
 EMAIL = 'ale.hdz.segura@gmail.com'
 AUTHOR = 'Alejandra Hernández Segura'
 REQUIRES_PYTHON = '>=3.9'
-VERSION = '0.1.6'
+VERSION = '0.1.7'
 
 
 REQUIRED = [
